@@ -36,7 +36,7 @@ var deleteNote = function(id) {
 var renderActiveNote = function() {
   $saveNoteBtn.hide();
 
-  if (activeNote.id) {
+  if (activeNote.title) {
     $noteTitle.attr("readonly", true);
     $noteText.attr("readonly", true);
     $noteTitle.val(activeNote.title);
@@ -47,43 +47,49 @@ var renderActiveNote = function() {
     $noteTitle.val("");
     $noteText.val("");
   }
+  console.log(activeNote);
 };
 
 // Get the note data from the inputs, save it to the db and update the view
 var handleNoteSave = function() {
   var newNote = {
     title: $noteTitle.val(),
-    text: $noteText.val()
-  };
+    text: $noteText.val(),
+    };
+
+  
 
   saveNote(newNote).then(function(data) {
     getAndRenderNotes();
     renderActiveNote();
+    
   });
 };
 
+
+
 // Delete the clicked note
-var handleNoteDelete = function(event) {
+var handleNoteDelete = function(event,idx) {
   // prevents the click listener for the list from being called when the button inside of it is clicked
   event.stopPropagation();
 
-  var note = $(this)
-    .parent(".list-group-item")
-    .data();
-
-  if (activeNote.id === note.id) {
+  if (activeNote.id === idx) {
     activeNote = {};
   }
 
-  deleteNote(note.id).then(function() {
-    getAndRenderNotes();
-    renderActiveNote();
+  deleteNote(idx).then(function() {
+    console.log( `x [deleteNote] removing idx=note_${idx}`);
+    // $('.list-group').remove(`#note_${idx}`);
+    $(`#note_${idx}`).detach();
+    // getAndRenderNotes();
+    // renderActiveNote();
   });
 };
 
 // Sets the activeNote and displays it
 var handleNoteView = function() {
   activeNote = $(this).data();
+  console.log(`[handleNoteVIew] activeNote=`, activeNote);
   renderActiveNote();
 };
 
@@ -112,13 +118,11 @@ var renderNoteList = function(notes) {
   for (var i = 0; i < notes.length; i++) {
     var note = notes[i];
 
-    var $li = $("<li class='list-group-item'>").data(note);
-    var $span = $("<span>").text(note.title);
-    var $delBtn = $(
-      "<i class='fas fa-trash-alt float-right text-danger delete-note'>"
-    );
+    var $li = $(`<li class='list-group-item' id='note_${note.id}'>`).data(note);
+    $li.append(`
+      <span>${note.title}</span>
+      <i class='fas fa-trash-alt float-right text-danger delete-note' onClick=handleNoteDelete(event,${note.id})>`);
 
-    $li.append($span, $delBtn);
     noteListItems.push($li);
   }
 
@@ -135,7 +139,7 @@ var getAndRenderNotes = function() {
 $saveNoteBtn.on("click", handleNoteSave);
 $noteList.on("click", ".list-group-item", handleNoteView);
 $newNoteBtn.on("click", handleNewNoteView);
-$noteList.on("click", ".delete-note", handleNoteDelete);
+// $noteList.on("click", ".delete-note", handleNoteDelete);
 $noteTitle.on("keyup", handleRenderSaveBtn);
 $noteText.on("keyup", handleRenderSaveBtn);
 
